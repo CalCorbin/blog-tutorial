@@ -4,6 +4,7 @@ import { Form, useActionData, useTransition } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
 import { createPost } from "~/models/post.server";
+import PostAdminPage from "~/components/PostAdminPage";
 
 type ActionData =
   | {
@@ -50,6 +51,15 @@ export default function NewPost() {
 
   return (
     <Form method="post">
+      <p className="text-right">
+        <button
+          type="submit"
+          className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-blue-300"
+          disabled={isCreating}
+        >
+          {isCreating ? "Creating..." : "Create Post"}
+        </button>
+      </p>
       <p>
         <label>
           Post Title:{" "}
@@ -82,15 +92,6 @@ export default function NewPost() {
           name="markdown"
           className={`${inputClassName} font-mono`}
         />
-      </p>
-      <p className="text-right">
-        <button
-          type="submit"
-          className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-blue-300"
-          disabled={isCreating}
-        >
-          {isCreating ? "Creating..." : "Create Post"}
-        </button>
       </p>
     </Form>
   );
