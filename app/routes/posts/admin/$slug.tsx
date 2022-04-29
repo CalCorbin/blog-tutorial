@@ -10,7 +10,7 @@ import {
 import { useState } from "react";
 import invariant from "tiny-invariant";
 import type { Post } from "~/models/post.server";
-import { getPost, updatePost } from "~/models/post.server";
+import { getPost, updatePost, deletePost } from "~/models/post.server";
 
 type LoaderData = { post: Post; html: string };
 
@@ -55,9 +55,15 @@ export const action: ActionFunction = async ({ request }) => {
     return json<ActionData>(errors);
   }
 
-  await updatePost({ title, slug, markdown });
+  if (formData.get("_method") === "delete") {
+    await deletePost(slug);
+  } else {
+    await updatePost({ title, slug, markdown });
+  }
 
-  return redirect(`/posts/${slug}`);
+  return redirect(
+    `/posts/${formData.get("_method") === "delete" ? "admin" : slug}`
+  );
 };
 
 export default function Edit() {
@@ -65,6 +71,7 @@ export default function Edit() {
   const errors = useActionData();
   const transition = useTransition();
   const isEditing = Boolean(transition.submission);
+  const isDeleting = Boolean(transition.submission);
   const [postData, setPostData] = useState({
     title: post.title,
     slug: post.slug,
@@ -81,6 +88,22 @@ export default function Edit() {
 
   return (
     <Form method="post">
+      <p className="text-right">
+        <input type="hidden" name="_method" value="delete" />
+        <button
+          className="m-2 rounded bg-red-500 py-2 px-4 text-white hover:bg-red-600 focus:bg-red-400 disabled:bg-red-300"
+          disabled={isDeleting || isEditing}
+        >
+          {isDeleting ? "Deleting..." : "Delete Post"}
+        </button>
+        <button
+          type="submit"
+          className="m-2 rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-blue-300"
+          disabled={isEditing || isDeleting}
+        >
+          {isEditing ? "Updating..." : "Update Post"}
+        </button>
+      </p>
       <p>
         <label>
           Post Title:{" "}
@@ -127,15 +150,6 @@ export default function Edit() {
           value={postData.markdown}
           onChange={handleChange}
         />
-      </p>
-      <p className="text-right">
-        <button
-          type="submit"
-          className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-blue-300"
-          disabled={isEditing}
-        >
-          {isEditing ? "Updating..." : "Update Post"}
-        </button>
       </p>
     </Form>
   );
